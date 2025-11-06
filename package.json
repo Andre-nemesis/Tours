@@ -1,0 +1,16 @@
+{
+  "name": "projeton1",
+  "version": "1.0.0",
+  "description": "This project is made for the discipline Programing Mobile",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install-all": "npm install && cd tours && npm install && cd ../server && npm install"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
