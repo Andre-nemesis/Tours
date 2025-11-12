@@ -16,10 +16,12 @@ Antes de utilizar a aplicação é necessário a realização da configuração 
 - Para instalar todos os pacotes do servidor e da aplicação, utilizar o comando abaixo:
 
     `npm run install-all`
-
+    `npm install expo`
+    `npx expo install react-dom react-native-web`
+  
 - Para rodar a aplicação após fazer todas as configurações, utilize o comando abaixo:
 
-    `npm start`
+    `npx expo start`
 
 ## Estrutura de arquivos
 O diretório `server` irá se restringir a todo a lógica do servidor da aplicação, contendo assim a __API__ que irá disponibilizar os dados para a aplicação em __React Native__ consumir. Por consequênte, o diretório `tours` será referente a aplicação em __React Native__ com o framework __Expo Go__, caso seja feito a configuração para abrir a porta para acesso externo, a nivel __LAN__, alterar o endereço de __IP__ da __API__ para o seu endereço ___IPV4:Porta___.
