@@ -16,12 +16,11 @@ Antes de utilizar a aplicação é necessário a realização da configuração 
 - Para instalar todos os pacotes do servidor e da aplicação, utilizar o comando abaixo:
 
     `npm run install-all`
-
-- Para rodar a aplicação após fazer todas as configurações, utilize o comando abaixo:
-
-    `npm start`
     `npm install expo`
     `npx expo install react-dom react-native-web`
+  
+- Para rodar a aplicação após fazer todas as configurações, utilize o comando abaixo:
+
     `npx expo start`
 
 ## Estrutura de arquivos
