@@ -20,6 +20,7 @@ Antes de utilizar a aplicação é necessário a realização da configuração 
 - Para rodar a aplicação após fazer todas as configurações, utilize o comando abaixo:
 
     `npm start`
+    `npm install expo`
     `npx expo start`
 
 ## Estrutura de arquivos
