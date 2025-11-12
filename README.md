@@ -21,6 +21,7 @@ Antes de utilizar a aplicação é necessário a realização da configuração 
 
     `npm start`
     `npm install expo`
+    `npx expo install react-dom react-native-web`
     `npx expo start`
 
 ## Estrutura de arquivos
