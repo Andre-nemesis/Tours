@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { ThemeProvider, useTheme } from '@/components/ThemeContext'; // Importar o ThemeProvider e useTheme
+import { ThemeProvider, useTheme } from '../components/ThemeContext'; // Importar o ThemeProvider e useTheme
 
 export {
   // Catch any errors thrown by the Layout component.
