@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Tour's
 
 Este projeto se determina a criar uma aplicação mobile multi plataforma(Android & Ios) utilizando alguns recursos do dispositivo utilizando o react native e o expo go, como:
@@ -25,3 +26,8 @@ Antes de utilizar a aplicação é necessário a realização da configuração 
 
 ## Estrutura de arquivos
 O diretório `server` irá se restringir a todo a lógica do servidor da aplicação, contendo assim a __API__ que irá disponibilizar os dados para a aplicação em __React Native__ consumir. Por consequênte, o diretório `tours` será referente a aplicação em __React Native__ com o framework __Expo Go__, caso seja feito a configuração para abrir a porta para acesso externo, a nivel __LAN__, alterar o endereço de __IP__ da __API__ para o seu endereço ___IPV4:Porta___.
+=======
+ # Teste
+
+ - Danne
+>>>>>>> 612cca6ce5cd654fda86f868204debe476267e83
