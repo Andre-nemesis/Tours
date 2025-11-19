@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "concurrently": "^9.2.1",
-    "expo": "^54.0.23",
+    "expo": "^54.0.25",
     "react-dom": "19.1.0",
     "react-native-web": "^0.21.0"
   },
