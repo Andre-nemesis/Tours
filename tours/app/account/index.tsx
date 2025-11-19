@@ -9,16 +9,28 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
-export default function LoginScreen() {
+type Props = {
+  onLogin?: () => void;
+  onBack?: () => void;
+};
+
+export default function LoginScreen({ onLogin, onBack }: Props) {
   const [secure, setSecure] = useState(true);
   const navigation = useNavigation();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
       {/* Botão Voltar */}
-      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        style={styles.back}
+        onPress={() => {
+          if (onBack) onBack();
+          else navigation.goBack();
+        }}
+      >
         <Ionicons name="chevron-back" size={24} />
         <Text style={styles.backText}>Voltar</Text>
       </TouchableOpacity>
@@ -54,7 +66,13 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       {/* Botão Entrar */}
-      <TouchableOpacity style={styles.primaryButton}>
+      <TouchableOpacity
+        style={styles.primaryButton}
+        onPress={() => {
+          if (onLogin) onLogin();
+          else router.replace('/homeScreen');
+        }}
+      >
         <Text style={styles.loginText}>Entrar na minha conta</Text>
       </TouchableOpacity>
 

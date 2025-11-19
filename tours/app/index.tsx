@@ -1,44 +1,46 @@
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
 import SplashScreen from './onboarding/SplashScreen';
 import Onboarding1 from './onboarding/Onboarding1';
 import Onboarding2 from './onboarding/Onboarding2';
 import Onboarding3 from './onboarding/Onboarding3';
-import TelaInicial from './onboarding/TelaInicial';
-import Favoritos from './onboarding/Favoritos';
-import Conta from './onboarding/conta'; // Import the new Conta component
+import Account from './account';
+import HomeScreen from './homeScreen';
+import Favorites from './homeScreen/Favorites/index';
+import Profile from './homeScreen/Profile/index';
 
-// <-- import com nome em PascalCase
 
 export default function Home() {
-  const [screen, setScreen] = useState('splash'); // Alterado de volta para iniciar na SplashScreen
+  const router = useRouter();
+  const [screen, setScreen] = useState('splash');
 
-  // useEffect para navegação inicial para on1 reativado
   useEffect(() => {
     const timer = setTimeout(() => {
-      setScreen('on1'); // muda para o Onboarding 1
+      setScreen('on1'); // Após 2,5 segundos, vá para a tela de onboarding 1
     }, 2500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Funções enviadas para os botões
   const goToOn2 = () => setScreen('on2');
-  const skipAll = () => setScreen('initial'); // agora pula para a tela inicial
+  const skipAll = () => {
+    router.replace('/homeScreen');
+  };
 
-  const goToInicio = () => setScreen('initial');
-  const goToMapas = () => setScreen('mapas');
-  const goToFavoritos = () => setScreen('favoritos');
-  const goToConta = () => setScreen('conta');
+  const goToInicio = () => router.replace('/homeScreen');
+  const goToMapas = () => router.replace('/homeScreen');
+  const goToFavoritos = () => router.replace('/homeScreen/favorites');
+  const goToConta = () => router.replace('/account');
 
   return (
     <>
       {screen === 'splash' && <SplashScreen />}
       {screen === 'on1' && <Onboarding1 onNext={goToOn2} onSkip={skipAll} />}
       {screen === 'on2' && <Onboarding2 onNext={() => setScreen('on3')} onSkip={skipAll} />}
-      {screen === 'on3' && <Onboarding3 onFinish={() => setScreen('initial')} />}
-      {screen === 'initial' && <TelaInicial goToInicio={goToInicio} goToMapas={goToMapas} goToFavoritos={goToFavoritos} goToConta={goToConta} />}
-      {screen === 'favoritos' && <Favoritos goToInicio={goToInicio} goToMapas={goToMapas} goToFavoritos={goToFavoritos} goToConta={goToConta} />}
-      {screen === 'conta' && <Conta goToInicio={goToInicio} goToMapas={goToMapas} goToFavoritos={goToFavoritos} goToConta={goToConta} />} {/* Conditionally render Conta */}
+      {screen === 'on3' && <Onboarding3 onFinish={() => router.replace('/account')} />}
+      {screen === 'initial' && null}
+      {screen === 'favoritos' && null}
+      {screen === 'conta' && null}
     </>
   );
 }

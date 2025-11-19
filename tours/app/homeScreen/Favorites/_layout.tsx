@@ -3,19 +3,8 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
 
-export default function Favoritos({ goToInicio, goToMapas, goToFavoritos, goToConta }) {
+export default function Favoritos() {
   const [search, setSearch] = useState('');
-
-  // Removido o temporizador de navegação automática
-  /*
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      goToConta();
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, []);
-  */
 
   const data = [
     {
@@ -79,33 +68,6 @@ export default function Favoritos({ goToInicio, goToMapas, goToFavoritos, goToCo
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {/* TAB BAR */}
-      <View style={styles.tabBar}>
-        
-        <TouchableOpacity style={styles.tabItem} onPress={goToInicio}>
-          <Ionicons name="home-outline" size={24} color="#555" />
-          <Text style={styles.tabLabel}>Início</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={goToMapas}>
-          <Ionicons name="map-outline" size={24} color="#555" />
-          <Text style={styles.tabLabel}>Mapas</Text>
-        </TouchableOpacity>
-
-        {/* Aba ativa */}
-        <TouchableOpacity style={[styles.tabItem, styles.tabActive]} onPress={goToFavoritos}>
-          <Ionicons name="heart" size={26} color="#22c55e" /> {/* Updated icon to solid heart */}
-          <Text style={styles.tabLabelActive}>Favoritos</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={goToConta}>
-          <Ionicons name="person-outline" size={24} color="#555" />
-          <Text style={styles.tabLabel}>Conta</Text>
-        </TouchableOpacity>
-
-      </View>
-
     </View>
   );
 }
