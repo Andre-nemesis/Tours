@@ -1,7 +1,7 @@
-import db from '../models/index.js'
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { DataTypes } from 'sequelize';
+import db from '../models/models.js';
 
 const ALLOWED = {
     image: ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'],
@@ -43,7 +43,7 @@ function sanitizeName(name) {
 const LocationController = {
     getLocations: async (req, res) => {
         try {
-            const locations = await db.locations.findAll({
+            const locations = await db.Locations.findAll({
                 attributes: ['id', 'name', 'address', 'photo', 'qrCode']
             });
             if (locations.length === 0) {
@@ -51,16 +51,16 @@ const LocationController = {
             }
             return res.status(200).json(locations);
         } catch (error) {
-            return res.status(500).json({ error: 'Ocorreu um erro ao carregar as localizações.', details: error.message });
+            return res.status(500).json({ err: 'Ocorreu um erro ao carregar as localizações.', details: error.message, stack: error.stack });
         }
     },
 
     getLocationsWithComponents: async (req, res) => {
         try {
-            const locations = await db.locations.findAll({
+            const locations = await db.Locations.findAll({
                 include: [
-                    { model: db.attractions, as: 'attractions', attributes: ['id', 'name', 'timeExposition', 'hasLimit', 'limitPeople'] },
-                    { model: db.views, as: 'views', attributes: ['id', 'name', 'contentType', 'content'] }
+                    { model: db.Attractions, as: 'attractions', attributes: ['id', 'name', 'timeExposition', 'hasLimit', 'limitPeople'] },
+                    { model: db.Views, as: 'views', attributes: ['id', 'name', 'contentType', 'content'] }
                 ]
             });
             if (locations.length === 0) {
@@ -75,10 +75,10 @@ const LocationController = {
     getLocationsWithComponentsById: async (req, res) => {
         try {
             const { id } = req.params;
-            const location = await db.locations.findByPk(id, {
+            const location = await db.Locations.findByPk(id, {
                 include: [
-                    { model: db.attractions, as: 'attractions', attributes: ['id', 'name', 'timeExposition', 'hasLimit', 'limitPeople'] },
-                    { model: db.views, as: 'views', attributes: ['id', 'name', 'contentType', 'content'] }
+                    { model: db.Attractions, as: 'attractions', attributes: ['id', 'name', 'timeExposition', 'hasLimit', 'limitPeople'] },
+                    { model: db.Views, as: 'views', attributes: ['id', 'name', 'contentType', 'content'] }
                 ]
             });
             if (!location) {
@@ -131,7 +131,7 @@ const LocationController = {
             }
 
             // cria localização (note: address no model é JSON)
-            const location = await db.locations.create(
+            const location = await db.Locations.create(
                 { name, address, photo: photoPath || '', qrCode: '' },
                 { transaction: t }
             );
@@ -171,7 +171,7 @@ const LocationController = {
                 const contentValue = v.base64 ? filePath.replace(/\\/g, '/') : (v.url || v.path || filePath.replace(/\\/g, '/'));
                 const contentType = ext || mimeToExt(v.mime) || '';
 
-                const viewRecord = await db.views.create(
+                const viewRecord = await db.Views.create(
                     {
                         name: v.name || finalFilename,
                         contentType: contentType,
@@ -188,7 +188,7 @@ const LocationController = {
             // processa atrações: cada item { name, timeExposition, hasLimit, limitPeople, ... }
             for (const a of attractions) {
                 if (!a || !a.name) continue;
-                const attractionRecord = await db.attractions.create(
+                const attractionRecord = await db.Attractions.create(
                     {
                         name: a.name,
                         timeExposition: a.timeExposition || '00:00:00',

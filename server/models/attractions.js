@@ -1,14 +1,8 @@
 'use strict';
-const {
-    Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
-    class attractions extends Model {
-        static associate(models) {
-            attractions.belongsTo(models.locations, { foreignKey: 'locationId', as: 'attractions' });
-        }
-    }
-    attractions.init({
+import { DataTypes } from 'sequelize';
+
+export default (sequelize) => {
+    const Attractions = sequelize.define("Attractions", {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -17,29 +11,29 @@ module.exports = (sequelize, DataTypes) => {
         },
         name: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: false
         },
         timeExposition: {
             type: DataTypes.TIME,
-            allowNull: false,
+            allowNull: false
         },
         hasLimit: {
             type: DataTypes.BOOLEAN,
-            allowNull: false,
+            allowNull: false
         },
         limitPeople: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: false
         },
         locationId: {
             type: DataTypes.UUID,
             allowNull: false,
             references: {
                 model: 'locations',
-                key: 'id',
-                onUpdate: 'CASCADE',
-                onDelete: 'RESTRICT'
-            }
+                key: 'id'
+            },
+            onUpdate: 'CASCADE',
+            onDelete: 'RESTRICT'
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -53,10 +47,22 @@ module.exports = (sequelize, DataTypes) => {
             onUpdate: DataTypes.NOW
         }
     }, {
-        sequelize,
-        modelName: 'attractions',
         tableName: 'attractions',
         timestamps: true
     });
-    return attractions;
+
+    Attractions.associate = (models) => {
+        Attractions.belongsTo(models.Locations, {
+            foreignKey: 'locationId',
+            as: 'location'
+        });
+    };
+
+    Attractions.registerAssociations = function (models) {
+        if (typeof Attractions.associate === 'function') {
+            Attractions.associate(models);
+        }
+    };
+
+    return Attractions;
 };
