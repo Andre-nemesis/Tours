@@ -18,16 +18,26 @@ module.exports = {
           unique: true
         },
         timeExposition: {
-          type: Sequelize.INTEGER,
+          type: Sequelize.TIME,
           allowNull: false,
         },
         hasLimit: {
           type: Sequelize.BOOLEAN,
           allowNull: false
         },
-        limitPeaple: {
+        limitPeople: {
           type: Sequelize.INTEGER,
           allowNull: false
+        },
+        locationId:{
+          type: Sequelize.UUID,
+          allowNull:false,
+          references:{
+            key: 'id',
+            model: 'locations',
+            onUpdate: 'CASCADE',
+            onDelet: 'RESTRICT'
+          }
         },
         createdAt: {
           type: Sequelize.DATE,
