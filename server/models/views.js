@@ -1,14 +1,8 @@
 'use strict';
-const {
-    Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
-    class views extends Model {
-        static associate(models) {
-            views.belongsTo(models.locations, { foreignKey: 'locationId', as: 'views' });
-        }
-    }
-    views.init({
+import { DataTypes } from 'sequelize';
+
+export default (sequelize) => {
+    const Views = sequelize.define("Views", {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -17,25 +11,25 @@ module.exports = (sequelize, DataTypes) => {
         },
         name: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: false
         },
         contentType: {
             type: DataTypes.ENUM('.mp3', '.jpg', '.mp4', '.wav', '.png', '.jpeg', '.gif'),
-            allowNull: false,
+            allowNull: false
         },
         content: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: false
         },
         locationId: {
             type: DataTypes.UUID,
             allowNull: false,
             references: {
                 model: 'locations',
-                key: 'id',
-                onUpdate: 'CASCADE',
-                onDelete: 'RESTRICT'
-            }
+                key: 'id'
+            },
+            onUpdate: 'CASCADE',
+            onDelete: 'RESTRICT'
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -49,10 +43,22 @@ module.exports = (sequelize, DataTypes) => {
             onUpdate: DataTypes.NOW
         }
     }, {
-        sequelize,
-        modelName: 'views',
         tableName: 'views',
         timestamps: true
     });
-    return views;
+
+    Views.associate = (models) => {
+        Views.belongsTo(models.Locations, {
+            foreignKey: 'locationId',
+            as: 'location'
+        });
+    };
+
+    Views.registerAssociations = function(models) {
+        if (typeof Views.associate === 'function') {
+            Views.associate(models);
+        }
+    };
+
+    return Views;
 };
