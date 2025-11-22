@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { Link } from "expo-router";
 
 export default function CreateAccountScreen() {
   const [secure, setSecure] = useState(true);
@@ -54,7 +55,9 @@ export default function CreateAccountScreen() {
 
       {/* Esqueci a senha */}
       <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 6 }}>
-        <Text style={styles.forgotText}>Esqueci a senha</Text>
+        <Link href={"account/forgot_password_step1"}>
+        <Text style={styles.createText}>Já tenho uma conta</Text>
+        </Link>
       </TouchableOpacity>
 
       {/* Botão Criar conta */}
@@ -64,10 +67,12 @@ export default function CreateAccountScreen() {
 
       {/* Botão Entrar */}
       <TouchableOpacity style={styles.secundaryButton}>
-        <Text style={styles.createText}>Já tenho uma conta</Text>
+        <Link href={"account/index"} asChild>
+          <Text style={styles.createText}>Já tenho uma conta</Text>
+        </Link>
       </TouchableOpacity>
 
-      
+
     </View>
   );
 }
