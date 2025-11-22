@@ -2,22 +2,18 @@
   "name": "projeton1",
   "version": "1.0.0",
   "description": "This project is made for the discipline Programing Mobile",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install-all": "npm install && cd tours && npm install && cd ../server && npm install"
+    "install-all": "npm install && cd tours && npm install && cd ../server && npm install",
+     "start": "concurrently \"npm run server\" \"npm run client\"",
+    "db": "cd server && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
+    "client": "cd tours && npx expo start",
+    "server": "cd server && npm start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "concurrently": "^9.2.1",
-    "expo": "^54.0.23",
-    "react-dom": "19.1.0",
-    "react-native-web": "^0.21.0"
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
+    "concurrently": "^9.2.1"
   }
 }

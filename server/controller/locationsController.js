@@ -14,30 +14,30 @@ function extAllowed(type, ext) {
 }
 
 function stripBase64(s) {
-  const idx = s.indexOf('base64,');
-  return idx >= 0 ? s.slice(idx + 7) : s;
+    const idx = s.indexOf('base64,');
+    return idx >= 0 ? s.slice(idx + 7) : s;
 }
 
 function isBase64(s) {
-  return typeof s === 'string' && (s.startsWith('data:') || /^[A-Za-z0-9+/=]+\s*$/.test(s.slice(0, 100)));
+    return typeof s === 'string' && (s.startsWith('data:') || /^[A-Za-z0-9+/=]+\s*$/.test(s.slice(0, 100)));
 }
 
 function mimeToExt(mime) {
-  if (!mime) return null;
-  const map = {
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/webp': '.webp',
-    'image/gif': '.gif',
-    'audio/mpeg': '.mp3',
-    'audio/wav': '.wav',
-    'video/mp4': '.mp4',
-  };
-  return map[mime] || null;
+    if (!mime) return null;
+    const map = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/webp': '.webp',
+        'image/gif': '.gif',
+        'audio/mpeg': '.mp3',
+        'audio/wav': '.wav',
+        'video/mp4': '.mp4',
+    };
+    return map[mime] || null;
 }
 
 function sanitizeName(name) {
-  return name.replace(/[^a-z0-9-_]/gi, '_');
+    return name.replace(/[^a-z0-9-_]/gi, '_');
 }
 
 const LocationController = {
@@ -94,24 +94,30 @@ const LocationController = {
         const t = await db.sequelize.transaction();
         try {
             const { name, address, photo, attractions, views } = req.body;
+
             if (!name || !address || !photo || !Array.isArray(attractions) || !Array.isArray(views)) {
                 await t.rollback();
-                return res.status(400).json({ error: 'Todos os campos são obrigatórios e arrays devem ser usados para attractions e views' });
+                return res.status(400).json({
+                    error: 'Todos os campos são obrigatórios e attractions/views devem ser arrays'
+                });
             }
 
-            const baseDir = path.join('archives', sanitizeName(name));
+            const sanitizedName = sanitizeName(name);
+            const baseDir = path.join('archives', sanitizedName);
             const dirs = {
                 image: path.join(baseDir, 'image'),
                 audio: path.join(baseDir, 'audio'),
                 video: path.join(baseDir, 'video'),
+                qrcode: path.join(baseDir, 'qrcode'), 
             };
 
-            // cria diretórios
-            await mkdir(dirs.image, { recursive: true });
-            await mkdir(dirs.audio, { recursive: true });
-            await mkdir(dirs.video, { recursive: true });
+            await Promise.all([
+                mkdir(dirs.image, { recursive: true }),
+                mkdir(dirs.audio, { recursive: true }),
+                mkdir(dirs.video, { recursive: true }),
+                mkdir(dirs.qrcode, { recursive: true }),
+            ]);
 
-            // salva foto principal (aceita { filename, base64 } ou url/string => salva se base64)
             let photoPath = null;
             if (typeof photo === 'object' && photo.base64 && photo.filename) {
                 const ext = path.extname(photo.filename) || '.jpg';
@@ -126,90 +132,106 @@ const LocationController = {
                     await writeFile(photoPath, Buffer.from(stripBase64(photo), 'base64'));
                     photoPath = photoPath.replace(/\\/g, '/');
                 } else {
-                    photoPath = photo; // url ou caminho já existente
+                    photoPath = photo; 
                 }
             }
 
-            // cria localização (note: address no model é JSON)
             const location = await db.Locations.create(
-                { name, address, photo: photoPath || '', qrCode: '' },
+                {
+                    name,
+                    address,
+                    photo: photoPath || '',
+                    qrCode: '' 
+                },
                 { transaction: t }
             );
 
+            const PUBLIC_URL = process.env.APP_URL || 'http://localhost:3001';
+            const locationUrl = `${PUBLIC_URL}/locations/${location.id}`;
+
+            const qrFileName = `qrcode-${location.id}.png`;
+            const qrFilePath = path.join(dirs.qrcode, qrFileName);
+
+            await QRCode.toFile(
+                qrFilePath,
+                locationUrl,
+                {
+                    width: 512,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }
+            );
+
+            const qrCodePath = qrFilePath.replace(/\\/g, '/');
+
+            await location.update({ qrCode: qrCodePath }, { transaction: t });
+
             const savedViews = [];
-            // processa views: cada item deve conter { name, type: 'image'|'audio'|'video', filename, base64, url, mime }
             for (const v of views) {
-                if (!v || !v.type) continue;
+                if (!v?.type) continue;
                 const type = v.type.toLowerCase();
                 const targetDir = dirs[type];
                 if (!targetDir) continue;
 
-                let originalFilename = v.filename || v.name || `${DataTypes.UUIDV4()}`;
-                let ext = path.extname(originalFilename);
-                if (!ext && v.mime) ext = mimeToExt(v.mime) || '';
-                if (!ext && v.base64) ext = (type === 'image' ? '.jpg' : (type === 'audio' ? '.mp3' : '.mp4'));
+                let ext = path.extname(v.filename || '') || mimeToExt(v.mime) ||
+                    (type === 'image' ? '.jpg' : type === 'audio' ? '.mp3' : '.mp4');
 
-                if (ext && !extAllowed(type, ext)) {
-                    // se extensão não permitida, pula
-                    continue;
-                }
+                if (ext && !extAllowed(type, ext)) continue;
 
                 const finalFilename = `${DataTypes.UUIDV4()}${ext}`;
                 const filePath = path.join(targetDir, finalFilename);
 
                 if (v.base64) {
                     await writeFile(filePath, Buffer.from(stripBase64(v.base64), 'base64'));
-                } else if (v.url && typeof v.url === 'string') {
-                    // não faz download aqui — grava a url no campo content
-                } else if (v.path) {
-                    // poderia copiar, mas aqui gravamos path como content
-                } else {
-                    // sem conteúdo, pular
-                    continue;
                 }
 
-                const contentValue = v.base64 ? filePath.replace(/\\/g, '/') : (v.url || v.path || filePath.replace(/\\/g, '/'));
-                const contentType = ext || mimeToExt(v.mime) || '';
+                const contentValue = v.base64 ? filePath.replace(/\\/g, '/') : (v.url || v.path || '');
 
-                const viewRecord = await db.Views.create(
-                    {
-                        name: v.name || finalFilename,
-                        contentType: contentType,
-                        content: contentValue,
-                        locationId: location.id
-                    },
-                    { transaction: t }
-                );
+                const viewRecord = await db.Views.create({
+                    name: v.name || finalFilename,
+                    contentType: ext,
+                    content: contentValue,
+                    locationId: location.id
+                }, { transaction: t });
 
                 savedViews.push(viewRecord);
             }
 
             const savedAttractions = [];
-            // processa atrações: cada item { name, timeExposition, hasLimit, limitPeople, ... }
             for (const a of attractions) {
-                if (!a || !a.name) continue;
-                const attractionRecord = await db.Attractions.create(
-                    {
-                        name: a.name,
-                        timeExposition: a.timeExposition || '00:00:00',
-                        hasLimit: !!a.hasLimit,
-                        limitPeople: a.limitPeople || 0,
-                        locationId: location.id
-                    },
-                    { transaction: t }
-                );
+                if (!a?.name) continue;
+                const attractionRecord = await db.Attractions.create({
+                    name: a.name,
+                    timeExposition: a.timeExposition || '00:00:00',
+                    hasLimit: !!a.hasLimit,
+                    limitPeople: a.limitPeople || 0,
+                    locationId: location.id
+                }, { transaction: t });
                 savedAttractions.push(attractionRecord);
             }
 
             await t.commit();
+
             return res.status(201).json({
-                location,
+                location: {
+                    ...location.toJSON(),
+                    qrCode: qrCodePath 
+                },
                 viewsSaved: savedViews.length,
                 attractionsSaved: savedAttractions.length,
+                qrCodeUrl: `${PUBLIC_URL}/archives/${sanitizedName}/qrcode/${qrFileName}` // URL pública do QR
             });
+
         } catch (error) {
             await t.rollback();
-            return res.status(500).json({ error: 'Ocorreu um erro ao criar a localização.', details: error.message });
+            console.error('Erro ao criar localização:', error);
+            return res.status(500).json({
+                error: 'Ocorreu um erro ao criar a localização.',
+                details: error.message
+            });
         }
     }
 

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { Link } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,7 +18,7 @@ export default function InitialScreen({ goToInicio, goToMapas, goToFavoritos, go
 
   return (
     <View style={styles.container}>
-      
+
       <View
         style={[
           styles.circle,
@@ -38,11 +39,16 @@ export default function InitialScreen({ goToInicio, goToMapas, goToFavoritos, go
       <Text style={styles.title}>Entre e viva a experiência</Text>
 
       <TouchableOpacity style={styles.buttonGreen} onPress={goToInicio}>
-        <Text style={styles.buttonGreenText}>Entrar na minha conta</Text>
+        <Link href={"account/index"} asChild>
+          <Text style={styles.buttonGreenText}>Entrar na minha conta</Text>
+        </Link>
+
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.buttonGray} onPress={goToConta}>
-        <Text style={styles.buttonGrayText}>Criar uma conta</Text>
+        <Link href={"account/create_account"} asChild>
+          <Text style={styles.buttonGrayText}>Criar uma conta</Text>
+        </Link>
       </TouchableOpacity>
 
     </View>

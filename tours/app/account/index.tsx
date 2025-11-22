@@ -58,7 +58,7 @@ export default function LoginScreen() {
         <Text style={styles.loginText}>Entrar na minha conta</Text>
       </TouchableOpacity>
 
-      <Link href="/create_account" asChild>
+      <Link href="account/create_account" asChild>
         {/* Botão Criar conta */}
         <TouchableOpacity style={styles.secundaryButton}>
           <Text style={styles.createText}>Criar uma conta</Text>

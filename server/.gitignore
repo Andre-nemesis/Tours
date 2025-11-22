@@ -2,3 +2,5 @@
 .vscode/
 node_modules/
 .expo/
+archives/cedro/qrcode
+archives/ifce_cedro/qrcode
