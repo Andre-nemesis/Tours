@@ -42,7 +42,7 @@ export default (sequelize) => {
     });
 
     Users.associate = (models) => {
-        Users.belongsTo(models.Locations, {
+        Users.belongsToMany(models.Locations, {
             foreignKey: 'userId',
             through: 'favoriteLocations',
             as: 'fvLocations'
