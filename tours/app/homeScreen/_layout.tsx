@@ -39,9 +39,9 @@ export default function Layout() {
         }}
       />
 
-      {/* Maps */}
+      {/* Maps (placeholder) */}
       <Tabs.Screen
-        name="Favorites/index"
+        name="Maps"
         options={{
           title: "Mapas",
           tabBarIcon: ({ color }) => (
@@ -52,7 +52,7 @@ export default function Layout() {
 
       {/* Favorites */}
       <Tabs.Screen
-        name="favorites"
+        name="Favorites"
         options={{
           title: "Favoritos",
           tabBarIcon: ({ color }) => (
@@ -63,7 +63,7 @@ export default function Layout() {
 
       {/* Account */}
       <Tabs.Screen
-        name="profile"
+        name="Profile"
         options={{
           title: "Conta",
           tabBarIcon: ({ color }) => (

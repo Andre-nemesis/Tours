@@ -119,38 +119,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777',
   },
-  /* TAB BAR */
-  tabBar: {
-    width: '100%',
-    height: 80,
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderColor: '#DDD',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 0,
-  },
-  tabItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 70,
-    height: 70,
-    borderRadius: 15,
-  },
-  tabLabel: {
-    fontSize: 12,
-    color: '#555',
-    marginTop: 3,
-  },
-  tabActive: {
-    backgroundColor: '#C4FDD4',
-  },
-  tabLabelActive: {
-    fontSize: 12,
-    marginTop: 3,
-    color: '#22c55e',
-    fontWeight: '600',
-  },
 });
