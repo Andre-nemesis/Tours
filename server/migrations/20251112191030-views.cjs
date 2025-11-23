@@ -25,6 +25,16 @@ module.exports = {
           type: Sequelize.STRING,
           allowNull: false
         },
+        locationId:{
+          type: Sequelize.UUID,
+          allowNull:false,
+          references:{
+            key: 'id',
+            model: 'locations',
+            onUpdate: 'CASCADE',
+            onDelet: 'RESTRICT'
+          }
+        },
         createdAt: {
           type: Sequelize.DATE,
           allowNull: false,
