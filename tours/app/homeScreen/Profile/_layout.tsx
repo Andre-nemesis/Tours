@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-export default function Conta({ goToInicio, goToMapas, goToFavoritos, goToConta }) {
+export default function Conta() {
   return (
     <View style={styles.container}>
       {/* HEADER */}
@@ -38,30 +38,6 @@ export default function Conta({ goToInicio, goToMapas, goToFavoritos, goToConta 
           <Text style={styles.statNumber}>2</Text>
           <Text style={styles.statLabel}>Favoritos</Text>
         </View>
-      </View>
-
-      {/* TAB BAR */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={goToInicio}>
-          <Ionicons name="home-outline" size={24} color="#555" />
-          <Text style={styles.tabLabel}>Início</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={goToMapas}>
-          <Ionicons name="map-outline" size={24} color="#555" />
-          <Text style={styles.tabLabel}>Mapas</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={goToFavoritos}>
-          <Ionicons name="heart-outline" size={24} color="#555" />
-          <Text style={styles.tabLabel}>Favoritos</Text>
-        </TouchableOpacity>
-
-        {/* Aba ativa */}
-        <TouchableOpacity style={[styles.tabItem, styles.tabActive]} onPress={goToConta}>
-          <Ionicons name="person" size={26} color="#22c55e" />
-          <Text style={styles.tabLabelActive}>Conta</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -142,39 +118,5 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     color: '#777',
-  },
-  /* TAB BAR */
-  tabBar: {
-    width: '100%',
-    height: 80,
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderColor: '#DDD',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 0,
-  },
-  tabItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 70,
-    height: 70,
-    borderRadius: 15,
-  },
-  tabLabel: {
-    fontSize: 12,
-    color: '#555',
-    marginTop: 3,
-  },
-  tabActive: {
-    backgroundColor: '#C4FDD4',
-  },
-  tabLabelActive: {
-    fontSize: 12,
-    marginTop: 3,
-    color: '#22c55e',
-    fontWeight: '600',
   },
 });

@@ -53,26 +53,17 @@ export default function CreateAccountScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Esqueci a senha */}
-      <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 6 }}>
-        <Link href={"account/forgot_password_step1"}>
-        <Text style={styles.createText}>Já tenho uma conta</Text>
-        </Link>
-      </TouchableOpacity>
-
       {/* Botão Criar conta */}
       <TouchableOpacity style={styles.primaryButton}>
         <Text style={styles.loginText}>Criar uma conta</Text>
       </TouchableOpacity>
 
-      {/* Botão Entrar */}
-      <TouchableOpacity style={styles.secundaryButton}>
-        <Link href={"account/index"} asChild>
-          <Text style={styles.createText}>Já tenho uma conta</Text>
-        </Link>
-      </TouchableOpacity>
-
-
+      {/* Botão Já tenho uma conta */}
+      <Link href={"account/"} asChild>
+          <TouchableOpacity style={styles.secundaryButton}>
+            <Text style={styles.createText}>Já tenho uma conta</Text>
+          </TouchableOpacity>
+      </Link>
     </View>
   );
 }
