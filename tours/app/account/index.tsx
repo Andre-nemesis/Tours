@@ -23,20 +23,9 @@ export default function LoginScreen({ onLogin, onBack }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Botão Voltar */}
-      <TouchableOpacity
-        style={styles.back}
-        onPress={() => {
-          if (onBack) onBack();
-          else navigation.goBack();
-        }}
-      >
-        <Ionicons name="chevron-back" size={24} />
-        <Text style={styles.backText}>Voltar</Text>
-      </TouchableOpacity>
 
       {/* Títulos */}
-      <Text style={styles.title}>Bem vindo novamente</Text>
+      <Text style={styles.title}>Bem vindo</Text>
       <Text style={styles.subtitle}>Entre na sua conta da Tours</Text>
 
       {/* Campo Email */}
@@ -60,10 +49,12 @@ export default function LoginScreen({ onLogin, onBack }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Esqueci a senha */}
-      <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 6 }}>
-        <Text style={styles.forgotText}>Esqueci a senha</Text>
-      </TouchableOpacity>
+      <Link href={"account/forgot_password_step1"} asChild>
+          {/* Esqueci a senha */}
+          <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 6 }}>
+            <Text style={styles.forgotText}>Esqueci a senha</Text>
+          </TouchableOpacity>
+      </Link>
 
       {/* Botão Entrar */}
       <TouchableOpacity

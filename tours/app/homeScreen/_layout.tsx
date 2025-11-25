@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { useTheme } from "@/components/ThemeContext";
+import { useTheme } from "../../components/ThemeContext";
 
 export default function Layout() {
   const { theme } = useTheme();
@@ -11,7 +11,7 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         tabBarShowLabel: true,
         tabBarActiveTintColor: "#00C18A",
         tabBarInactiveTintColor: "#999",
