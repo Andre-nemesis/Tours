@@ -9,22 +9,23 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 
-export default function LoginScreen() {
+type Props = {
+  onLogin?: () => void;
+  onBack?: () => void;
+};
+
+export default function LoginScreen({ onLogin, onBack }: Props) {
   const [secure, setSecure] = useState(true);
   const navigation = useNavigation();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
-      {/* Botão Voltar */}
-      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-        <Ionicons name="chevron-back" size={24} />
-        <Text style={styles.backText}>Voltar</Text>
-      </TouchableOpacity>
 
       {/* Títulos */}
-      <Text style={styles.title}>Bem vindo novamente</Text>
+      <Text style={styles.title}>Bem vindo</Text>
       <Text style={styles.subtitle}>Entre na sua conta da Tours</Text>
 
       {/* Campo Email */}
@@ -48,13 +49,21 @@ export default function LoginScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Esqueci a senha */}
-      <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 6 }}>
-        <Text style={styles.forgotText}>Esqueci a senha</Text>
-      </TouchableOpacity>
+      <Link href={"account/forgot_password_step1"} asChild>
+          {/* Esqueci a senha */}
+          <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 6 }}>
+            <Text style={styles.forgotText}>Esqueci a senha</Text>
+          </TouchableOpacity>
+      </Link>
 
       {/* Botão Entrar */}
-      <TouchableOpacity style={styles.primaryButton}>
+      <TouchableOpacity
+        style={styles.primaryButton}
+        onPress={() => {
+          if (onLogin) onLogin();
+          else router.replace('/homeScreen');
+        }}
+      >
         <Text style={styles.loginText}>Entrar na minha conta</Text>
       </TouchableOpacity>
 

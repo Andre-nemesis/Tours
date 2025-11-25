@@ -52,8 +52,8 @@ function RootLayoutNav() {
   const { theme } = useTheme();
   return (
     <NavigationThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack initialRouteName="index">
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
       </Stack>
     </NavigationThemeProvider>
   );
