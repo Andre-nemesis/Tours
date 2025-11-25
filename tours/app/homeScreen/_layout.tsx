@@ -1,12 +1,10 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { useTheme } from "../../components/ThemeContext";
 
 export default function Layout() {
-  const { theme } = useTheme();
 
-  const isDark = theme === "dark";
+  // const isDark = theme === "dark";
 
   return (
     <Tabs
@@ -19,8 +17,8 @@ export default function Layout() {
           height: 70,
           paddingBottom: 10,
           paddingTop: 10,
-          backgroundColor: isDark ? "#111" : "#FFF",
-          borderTopColor: isDark ? "#222" : "#ddd",
+          // backgroundColor: isDark ? "#111" : "#FFF",
+          // borderTopColor: isDark ? "#222" : "#ddd",
         },
         tabBarLabelStyle: {
           fontSize: 12,
