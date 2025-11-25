@@ -3,7 +3,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } fro
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect } from 'react'
 import 'react-native-reanimated';
 
 import { ThemeProvider, useTheme } from '../components/ThemeContext'; // Importar o ThemeProvider e useTheme
