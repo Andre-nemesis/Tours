@@ -1,15 +1,22 @@
 import express from 'express';
-import cors from 'cors';
+import corsMiddleware from './middlewares/corsMiddleware.js';
+import { logger } from './middlewares/loggerMiddleware.js';
+import { errorHandler, notFound } from './middlewares/errorMiddleware.js';
 import locationRoute from './routes/locationRoute.js';
 import favoriteRoute from './routes/favoriteRoute.js';
 
 const app = express();
 
-// Middlewares
-// app.use(cors());
+app.use(corsMiddleware);
+app.use(logger);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use('/api',locationRoute);
+
+app.use('/api', locationRoute);
 app.use('/api', favoriteRoute);
+
+app.use(notFound);
+
+app.use(errorHandler);
 
 export default app;
