@@ -6,8 +6,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { ThemeProvider, useTheme } from '../../components/ThemeContext'; // Importar o ThemeProvider e useTheme
-
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -42,16 +40,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
       <RootLayoutNav />
-    </ThemeProvider>
   );
 }
 
 function RootLayoutNav() {
-  const { theme } = useTheme();
   return (
-    <NavigationThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
+    <NavigationThemeProvider value={DefaultTheme}>
       <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index"/>
       </Stack>

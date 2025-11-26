@@ -1,10 +1,10 @@
 import express from 'express';
-import LocationController from '../controller/locationsController.js'
+import locationsController from '../controller/locationsController.js';
+import authMiddleware from '../middlewares/authMiddleware.js';
+import validateMiddleware from '../middlewares/validateMiddleware.js';
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/all',LocationController.getLocations);
-router.get('/location-components',LocationController.getLocationsWithComponents);
-router.get('/location-components/:id',LocationController.getLocationsWithComponentsById);
+router.post('/locations', authMiddleware, validateMiddleware, locationsController.createLocation);
 
 export default router;
