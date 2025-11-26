@@ -1,4 +1,4 @@
-const cors = require('cors');
+import cors from 'cors';
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -26,4 +26,4 @@ const corsOptions = {
 
 const corsMiddleware = cors(corsOptions);
 
-module.exports = corsMiddleware;
+export default corsMiddleware;

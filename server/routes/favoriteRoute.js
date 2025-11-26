@@ -1,6 +1,6 @@
 import express from 'express';
 import FavoriteController from '../controller/favoriteController.js';
-import authMiddleware from '../middlewares/authMiddleware.js';
+import {authMiddleware} from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 

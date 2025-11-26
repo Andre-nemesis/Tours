@@ -1,10 +1,13 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv'
 
-const authMiddleware = async (req, res, next) => {
+dotenv.config();
+
+export const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer')) {
       return res.status(401).json({
         success: false,
         message: 'Token não fornecido'
@@ -50,7 +53,7 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-const optionalAuth = async (req, res, next) => {
+export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -74,4 +77,3 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { authMiddleware, optionalAuth };
