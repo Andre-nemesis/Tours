@@ -7,14 +7,14 @@ export const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer')) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
         message: 'Token não fornecido'
       });
     }
 
-    const token = authHeader.substring(7);
+    const token = authHeader.substring(7); // Remove "Bearer " corretamente
 
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({
@@ -27,7 +27,6 @@ export const authMiddleware = async (req, res, next) => {
     req.user = {
       id: decoded.userId || decoded.id,
       email: decoded.email,
-      role: decoded.role
     };
 
     next();
@@ -35,7 +34,7 @@ export const authMiddleware = async (req, res, next) => {
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
         success: false,
-        message: 'Token inválido'
+        message: 'Token inválido ou malformado'
       });
     }
     
