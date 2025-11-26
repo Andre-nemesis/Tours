@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "install-all": "npm install && cd tours && npm install && cd ../server && npm install",
-     "start": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
     "db": "cd server && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
     "client": "cd tours && npx expo start",
     "server": "cd server && npm start"
@@ -14,6 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "expo": "^54.0.25",
+    "react-dom": "19.1.0",
+    "react-native-web": "^0.21.0"
   }
 }
