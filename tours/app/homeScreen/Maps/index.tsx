@@ -20,6 +20,8 @@ export default function MapsScreen() {
   const [selectedCoord, setSelectedCoord] = useState<{ latitude: number; longitude: number } | null>(null);
   const isWeb = Platform.OS === 'web';
   const mapRef = useRef<any>(null);
+  const [MapViewComp, setMapViewComp] = useState<any>(null);
+  const [MarkerComp, setMarkerComp] = useState<any>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -88,18 +90,24 @@ export default function MapsScreen() {
     );
   }
 
-  // Dynamically require react-native-maps only on native platforms
-  let MapView: any = null;
-  let Marker: any = null;
-  if (!isWeb) {
-    try {
-      // require at runtime so bundlers for web don't attempt to load native code
-      MapView = require('react-native-maps').default;
-      Marker = require('react-native-maps').Marker;
-    } catch (e) {
-      console.warn('react-native-maps not available', e);
-    }
-  }
+  // Lazy-load react-native-maps only after mount on native platforms
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (isWeb) return;
+      try {
+        const mod = await import('react-native-maps');
+        if (!mounted) return;
+        const m: any = mod as any;
+        setMapViewComp(m.default || m.MapView || m);
+        setMarkerComp(m.Marker || m.MapMarker || null);
+      } catch (e) {
+        console.warn('react-native-maps not available', e);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [isWeb]);
 
   const goToCoordinate = async (latitude: number, longitude: number) => {
     if (!latitude || !longitude) return;
@@ -125,7 +133,7 @@ export default function MapsScreen() {
     }
   };
 
-  if (isWeb || !MapView) {
+  if (isWeb || !MapViewComp) {
     // Web: render embedded Google Maps iframe and clickable list to update it
     const iframeCenter = selectedCoord || (markers.length > 0 ? markers[0].coordinate : { latitude: initialRegion.latitude, longitude: initialRegion.longitude });
     const iframeSrc = `https://maps.google.com/maps?q=${iframeCenter.latitude},${iframeCenter.longitude}&z=15&output=embed`;
@@ -156,19 +164,19 @@ export default function MapsScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <MapViewComp
         style={styles.map}
         ref={mapRef}
         initialRegion={initialRegion}
       >
         {markers.map((m) => (
-          <Marker
+          <MarkerComp
             key={m.id}
             coordinate={m.coordinate}
             title={m.title}
           />
         ))}
-      </MapView>
+      </MapViewComp>
 
       {/* Simple sticky list at bottom for quick navigation to markers (native) */}
       <View style={styles.bottomList} pointerEvents="box-none">
