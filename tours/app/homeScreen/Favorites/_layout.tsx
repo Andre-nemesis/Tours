@@ -25,10 +25,7 @@ export default function Favoritos() {
 
   return (
     <View style={styles.container}>
-
-      {/* TÍTULO */}
-      <Text style={styles.title}>Favoritos</Text>
-
+      
       {/* BARRA DE PESQUISA */}
       <View style={styles.searchBox}>
         <Feather name="search" size={20} color="#777" style={{ marginRight: 10 }} />
