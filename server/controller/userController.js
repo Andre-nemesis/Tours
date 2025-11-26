@@ -1,5 +1,5 @@
-'use strict';
-import db from '../models/index.js';
+import db from '../models/models.js';
+import bcryptjs from 'bcryptjs';
 
 const UserController = {
     getUsers: async (req, res) => {
@@ -24,7 +24,8 @@ const UserController = {
     createUser: async (req, res) => {
         try {
             const { name, email, password } = req.body;
-            const user = await db.Users.create({ name, email, password });
+            const pHashed = await bcryptjs.hash(password, 10);
+            const user = await db.Users.create({ name, email, password:pHashed });
             res.status(201).json(user);
         } catch (err) {
             res.status(400).json({ error: 'Erro ao criar usuário.', details: err.errors });
@@ -36,7 +37,8 @@ const UserController = {
             const { name, email, password } = req.body;
             const user = await db.Users.findByPk(req.params.id);
             if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-            await user.update({ name, email, password });
+            const pHashed = await bcryptjs.hash(password, 10);
+            await user.update({ name, email, password: pHashed });
             res.status(200).json(user);
         } catch (err) {
             res.status(400).json({ error: 'Erro ao atualizar usuário.', details: err.errors });
@@ -47,6 +49,7 @@ const UserController = {
         try {
             const user = await db.Users.findByPk(req.params.id);
             if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+            await db.FavoriteLocations.destroy({ where: { userId: user.id } });
             await user.destroy();
             res.status(204).send();
         } catch (err) {
