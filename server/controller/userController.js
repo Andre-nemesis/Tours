@@ -2,7 +2,7 @@
 import db from '../models/index.js';
 
 const UserController = {
-    get: async (req, res) => {
+    getUsers: async (req, res) => {
         try {
             const users = await db.Users.findAll();
             res.status(200).json(users);
@@ -11,7 +11,7 @@ const UserController = {
         }
     },
 
-    getById: async (req, res) => {
+    getUserById: async (req, res) => {
         try {
             const user = await db.Users.findByPk(req.params.id);
             if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
@@ -21,7 +21,7 @@ const UserController = {
         }
     },
 
-    create: async (req, res) => {
+    createUser: async (req, res) => {
         try {
             const { name, email, password } = req.body;
             const user = await db.Users.create({ name, email, password });
@@ -31,7 +31,7 @@ const UserController = {
         }
     },
 
-    update: async (req, res) => {
+    updateUser: async (req, res) => {
         try {
             const { name, email, password } = req.body;
             const user = await db.Users.findByPk(req.params.id);
@@ -43,7 +43,7 @@ const UserController = {
         }
     },
 
-    remove: async (req, res) => {
+    removeUser: async (req, res) => {
         try {
             const user = await db.Users.findByPk(req.params.id);
             if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
