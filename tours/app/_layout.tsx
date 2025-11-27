@@ -3,10 +3,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } fro
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react'
 import 'react-native-reanimated';
 
 import { ThemeProvider, useTheme } from '../components/ThemeContext'; // Importar o ThemeProvider e useTheme
+import { useEffect } from 'react';
+import { loadToken } from '../services/auth';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -30,6 +31,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (error) throw error;
   }, [error]);
+
+  useEffect(() => {
+    // Carrega token salvo ao iniciar o app
+    loadToken().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (loaded) {

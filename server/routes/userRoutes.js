@@ -23,5 +23,7 @@ router.get('/users/:id',authMiddleware,validateParams(idSchema), UserController.
 router.post('/users',optionalAuth,validate(createLocationSchema), UserController.createUser);
 router.put('/users/:id',authMiddleware,validate(createLocationSchema),validateParams(idSchema), UserController.updateUser);
 router.delete('/users/:id',authMiddleware,validateParams(idSchema), UserController.removeUser);
+router.post('/users/forgot-password', UserController.forgotPassword);
+router.post('/users/reset-password', UserController.resetPassword);
 
 export default router;

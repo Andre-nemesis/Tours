@@ -5,8 +5,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 export default function Conta() {
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      <Text style={styles.title}>Conta</Text>
 
       {/* USER PROFILE */}
       <View style={styles.profileContainer}>
