@@ -8,11 +8,19 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import { registerRequest, loginRequest, saveToken } from '../../services/auth';
+import api, { setAuthToken } from '../../services/api';
 
 export default function CreateAccountScreen() {
   const [secure, setSecure] = useState(true);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
@@ -30,11 +38,11 @@ export default function CreateAccountScreen() {
 
       {/* Campo Nome */}
       <Text style={styles.label}>Nome:</Text>
-      <TextInput style={styles.input} placeholder="" />
+      <TextInput style={styles.input} placeholder="" value={name} onChangeText={setName} />
 
       {/* Campo Email */}
       <Text style={styles.label}>Email:</Text>
-      <TextInput style={styles.input} placeholder="" />
+      <TextInput style={styles.input} placeholder="" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
 
       {/* Campo Senha */}
       <Text style={styles.label}>Senha:</Text>
@@ -43,6 +51,8 @@ export default function CreateAccountScreen() {
           style={styles.passwordInput}
           secureTextEntry={secure}
           placeholder=""
+          value={password}
+          onChangeText={setPassword}
         />
         <TouchableOpacity onPress={() => setSecure(!secure)}>
           <Ionicons
@@ -54,8 +64,35 @@ export default function CreateAccountScreen() {
       </View>
 
       {/* Botão Criar conta */}
-      <TouchableOpacity style={styles.primaryButton}>
-        <Text style={styles.loginText}>Criar uma conta</Text>
+      <TouchableOpacity
+        style={styles.primaryButton}
+        disabled={loading}
+        onPress={async () => {
+          setError(null);
+          if (!name || !email || !password) {
+            setError('Preencha todos os campos');
+            return;
+          }
+          setLoading(true);
+          try {
+            await registerRequest(name, email, password);
+            // fazer login automático
+            const res = await loginRequest(email, password);
+            const token = res.data?.token;
+            if (token) {
+              await saveToken(token);
+              setAuthToken(token);
+            }
+            router.replace('/homeScreen');
+          } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao criar conta';
+            setError(msg);
+          } finally {
+            setLoading(false);
+          }
+        }}
+      >
+        <Text style={styles.loginText}>{loading ? 'Criando...' : 'Criar uma conta'}</Text>
       </TouchableOpacity>
 
       {/* Botão Já tenho uma conta */}
