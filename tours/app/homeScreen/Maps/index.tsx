@@ -22,12 +22,12 @@ export default function MapsScreen() {
   const mapRef = useRef<any>(null);
   const [MapViewComp, setMapViewComp] = useState<any>(null);
   const [MarkerComp, setMarkerComp] = useState<any>(null);
-
+  
   useEffect(() => {
     let mounted = true;
     const fetchLocations = async () => {
       try {
-        const res = await api.get('/api/all');
+        const res = await api.get('/api/locations');
         if (!mounted) return;
         setLocations(res.data || []);
       } catch (err: any) {
@@ -41,6 +41,25 @@ export default function MapsScreen() {
     fetchLocations();
     return () => { mounted = false; };
   }, []);
+
+  // Lazy-load react-native-maps only after mount on native platforms
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (isWeb) return;
+      try {
+        const mod = await import('react-native-maps');
+        if (!mounted) return;
+        const m: any = mod as any;
+        setMapViewComp(m.default || m.MapView || m);
+        setMarkerComp(m.Marker || m.MapMarker || null);
+      } catch (e) {
+        console.warn('react-native-maps not available', e);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [isWeb]);
 
   const markers = locations
     .map((l) => {
@@ -90,24 +109,6 @@ export default function MapsScreen() {
     );
   }
 
-  // Lazy-load react-native-maps only after mount on native platforms
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (isWeb) return;
-      try {
-        const mod = await import('react-native-maps');
-        if (!mounted) return;
-        const m: any = mod as any;
-        setMapViewComp(m.default || m.MapView || m);
-        setMarkerComp(m.Marker || m.MapMarker || null);
-      } catch (e) {
-        console.warn('react-native-maps not available', e);
-      }
-    };
-    load();
-    return () => { mounted = false; };
-  }, [isWeb]);
 
   const goToCoordinate = async (latitude: number, longitude: number) => {
     if (!latitude || !longitude) return;

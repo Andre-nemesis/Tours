@@ -10,6 +10,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Link, useRouter } from "expo-router";
+import { loginRequest, saveToken } from '../../services/auth';
+import { setAuthToken } from '../../services/api';
 
 type Props = {
   onLogin?: () => void;
@@ -20,6 +22,10 @@ export default function LoginScreen({ onLogin, onBack }: Props) {
   const [secure, setSecure] = useState(true);
   const navigation = useNavigation();
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <View style={styles.container}>
@@ -30,7 +36,7 @@ export default function LoginScreen({ onLogin, onBack }: Props) {
 
       {/* Campo Email */}
       <Text style={styles.label}>Email:</Text>
-      <TextInput style={styles.input} placeholder="" />
+      <TextInput style={styles.input} placeholder="" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
 
       {/* Campo Senha */}
       <Text style={styles.label}>Senha:</Text>
@@ -39,6 +45,8 @@ export default function LoginScreen({ onLogin, onBack }: Props) {
           style={styles.passwordInput}
           secureTextEntry={secure}
           placeholder=""
+          value={password}
+          onChangeText={setPassword}
         />
         <TouchableOpacity onPress={() => setSecure(!secure)}>
           <Ionicons
@@ -57,14 +65,35 @@ export default function LoginScreen({ onLogin, onBack }: Props) {
       </Link>
 
       {/* Botão Entrar */}
+      {error && <Text style={{ color: '#a00', marginTop: 8 }}>{error}</Text>}
       <TouchableOpacity
         style={styles.primaryButton}
-        onPress={() => {
-          if (onLogin) onLogin();
-          else router.replace('/homeScreen');
+        disabled={loading}
+        onPress={async () => {
+          setError(null);
+          if (!email || !password) {
+            setError('Preencha email e senha');
+            return;
+          }
+          setLoading(true);
+          try {
+            const res = await loginRequest(email, password);
+            const token = res.data?.token;
+            if (token) {
+              await saveToken(token);
+              setAuthToken(token);
+            }
+            if (onLogin) onLogin();
+            else router.replace('/homeScreen');
+          } catch (err: any) {
+            const msg = err?.response?.data?.message || err?.response?.data?.error || 'Erro ao efetuar login';
+            setError(msg);
+          } finally {
+            setLoading(false);
+          }
         }}
       >
-        <Text style={styles.loginText}>Entrar na minha conta</Text>
+        <Text style={styles.loginText}>{loading ? 'Entrando...' : 'Entrar na minha conta'}</Text>
       </TouchableOpacity>
 
       <Link href="account/create_account" asChild>

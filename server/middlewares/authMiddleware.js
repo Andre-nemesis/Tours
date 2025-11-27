@@ -1,6 +1,9 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv'
 
-const authMiddleware = async (req, res, next) => {
+dotenv.config();
+
+export const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -11,7 +14,7 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    const token = authHeader.substring(7);
+    const token = authHeader.substring(7); // Remove "Bearer " corretamente
 
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({
@@ -24,7 +27,6 @@ const authMiddleware = async (req, res, next) => {
     req.user = {
       id: decoded.userId || decoded.id,
       email: decoded.email,
-      role: decoded.role
     };
 
     next();
@@ -32,7 +34,7 @@ const authMiddleware = async (req, res, next) => {
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
         success: false,
-        message: 'Token inválido'
+        message: 'Token inválido ou malformado'
       });
     }
     
@@ -50,7 +52,7 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-const optionalAuth = async (req, res, next) => {
+export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -74,4 +76,3 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { authMiddleware, optionalAuth };
