@@ -1,5 +1,3 @@
-const Joi = require('joi');
-
 const validate = (schema) => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req.body, {
@@ -74,4 +72,4 @@ const validateQuery = (schema) => {
   };
 };
 
-module.exports = { validate, validateParams, validateQuery };
+export default { validate, validateParams, validateQuery };

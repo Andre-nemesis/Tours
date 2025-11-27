@@ -25,10 +25,8 @@ const roleMiddleware = (...allowedRoles) => {
   };
 };
 
-const isAdmin = roleMiddleware('ADMIN');
+export const isAdmin = roleMiddleware('ADMIN');
 
-const isGuide = roleMiddleware('ADMIN', 'GUIDE');
+export const isGuide = roleMiddleware('ADMIN', 'GUIDE');
 
-const isUser = roleMiddleware('ADMIN', 'GUIDE', 'USER');
-
-module.exports = { roleMiddleware, isAdmin, isGuide, isUser };
+export const isUser = roleMiddleware('ADMIN', 'GUIDE', 'USER');

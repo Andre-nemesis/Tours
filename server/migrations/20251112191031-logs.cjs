@@ -44,16 +44,16 @@ module.exports = {
         RETURNS TRIGGER AS $$
         BEGIN
           IF (TG_OP = 'INSERT') THEN
-            INSERT INTO logs (table_name, operation, new_data)
-            VALUES (TG_TABLE_NAME, TG_OP, row_to_json(NEW));
+            INSERT INTO logs (table_name, operation, new_data, "createdAt")
+            VALUES (TG_TABLE_NAME, TG_OP, row_to_json(NEW), now());
             RETURN NEW;
           ELSIF (TG_OP = 'UPDATE') THEN
-            INSERT INTO logs (table_name, operation, old_data, new_data)
-            VALUES (TG_TABLE_NAME, TG_OP, row_to_json(OLD), row_to_json(NEW));
+            INSERT INTO logs (table_name, operation, old_data, new_data, "createdAt")
+            VALUES (TG_TABLE_NAME, TG_OP, row_to_json(OLD), row_to_json(NEW), now());
             RETURN NEW;
           ELSIF (TG_OP = 'DELETE') THEN
-            INSERT INTO logs (table_name, operation, old_data)
-            VALUES (TG_TABLE_NAME, TG_OP, row_to_json(OLD));
+            INSERT INTO logs (table_name, operation, old_data, "createdAt")
+            VALUES (TG_TABLE_NAME, TG_OP, row_to_json(OLD), now());
             RETURN OLD;
           END IF;
           RETURN NULL;

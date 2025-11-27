@@ -1,6 +1,6 @@
-const { Prisma } = require('@prisma/client');
+import { ValidationError, UniqueConstraintError, ForeignKeyConstraintError, DatabaseError } from 'sequelize';
 
-const errorHandler = (err, req, res, next) => {
+export const errorHandler = (err, req, res, next) => {
   console.error('Error:', err);
 
   // Erro customizado com statusCode
@@ -13,39 +13,37 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erros do Prisma
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    // Registro duplicado
-    if (err.code === 'P2002') {
-      return res.status(409).json({
-        success: false,
-        message: 'Registro duplicado',
-        field: err.meta?.target
-      });
-    }
-
-    // Registro não encontrado
-    if (err.code === 'P2025') {
-      return res.status(404).json({
-        success: false,
-        message: 'Registro não encontrado'
-      });
-    }
-
-    // Violação de constraint
-    if (err.code === 'P2003') {
-      return res.status(400).json({
-        success: false,
-        message: 'Violação de integridade referencial',
-        field: err.meta?.field_name
-      });
-    }
+  // Erros do Sequelize
+  if (err instanceof UniqueConstraintError) {
+    return res.status(409).json({
+      success: false,
+      message: 'Registro duplicado',
+      fields: err?.fields || null,
+      ...(process.env.NODE_ENV === 'development' && { errors: err?.errors })
+    });
   }
 
-  if (err instanceof Prisma.PrismaClientValidationError) {
+  if (err instanceof ValidationError) {
     return res.status(400).json({
       success: false,
-      message: 'Dados inválidos fornecidos'
+      message: 'Dados inválidos fornecidos',
+      errors: err.errors?.map(e => ({ message: e.message, path: e.path, value: e.value })) || null
+    });
+  }
+
+  if (err instanceof ForeignKeyConstraintError) {
+    return res.status(400).json({
+      success: false,
+      message: 'Violação de integridade referencial',
+      ...(err.index && { index: err.index })
+    });
+  }
+
+  if (err instanceof DatabaseError) {
+    return res.status(500).json({
+      success: false,
+      message: 'Erro de banco de dados',
+      ...(process.env.NODE_ENV === 'development' && { error: err.message, stack: err.stack })
     });
   }
 
@@ -60,11 +58,9 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-const notFound = (req, res) => {
+export const notFound = (req, res) => {
   res.status(404).json({
     success: false,
     message: `Rota ${req.method} ${req.path} não encontrada`
   });
 };
-
-module.exports = { errorHandler, notFound };
