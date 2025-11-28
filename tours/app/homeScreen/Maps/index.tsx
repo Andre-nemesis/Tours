@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Dimensions, Platform, TouchableOpacity, Linking } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
 import api from '../../../services/api';
+import favoritesService from '../../../services/favorites';
+import { on, off } from '../../../services/eventBus';
 
 type Location = {
   id: string;
@@ -18,6 +21,34 @@ export default function MapsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCoord, setSelectedCoord] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [adding, setAdding] = useState<Record<string, boolean>>({});
+  const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    let mounted = true;
+    const loadUserFavorites = async () => {
+      try {
+        const favs = await favoritesService.getFavorites();
+        if (!mounted) return;
+        if (Array.isArray(favs)) {
+          const map: Record<string, boolean> = {};
+          favs.forEach((f: any) => {
+            const lid = f.location?.id;
+            if (lid) map[lid] = true;
+          });
+          setAddedIds(map);
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar favoritos do usuário (Maps):', e);
+      }
+    };
+    loadUserFavorites();
+    const unsub = on('favoritesChanged', () => {
+      // reload current favorites map
+      loadUserFavorites();
+    });
+    return () => { unsub(); mounted = false; };
+  }, []);
   const isWeb = Platform.OS === 'web';
   const mapRef = useRef<any>(null);
   const [MapViewComp, setMapViewComp] = useState<any>(null);
@@ -153,10 +184,37 @@ export default function MapsScreen() {
           <Text style={{ fontWeight: '600', marginBottom: 8 }}>Localizações</Text>
           {markers.length === 0 && <Text>Nenhuma localização com coordenadas disponível.</Text>}
           {markers.map((m) => (
-            <TouchableOpacity key={m.id} style={{ marginBottom: 8 }} onPress={() => goToCoordinate(m.coordinate.latitude, m.coordinate.longitude)}>
-              <Text style={{ fontSize: 16, color: '#007aff' }}>{m.title}</Text>
-              <Text style={{ color: '#666' }}>{m.coordinate.latitude}, {m.coordinate.longitude}</Text>
-            </TouchableOpacity>
+            <View key={m.id} style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <TouchableOpacity onPress={() => goToCoordinate(m.coordinate.latitude, m.coordinate.longitude)} style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, color: '#007aff' }}>{m.title}</Text>
+                <Text style={{ color: '#666' }}>{m.coordinate.latitude}, {m.coordinate.longitude}</Text>
+              </TouchableOpacity>
+              <View style={{ marginLeft: 8 }}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    if (adding[m.id]) return;
+                    // toggle favorite: if already added, do nothing (could implement remove later)
+                    if (addedIds[m.id]) return;
+                    setAdding((s) => ({ ...s, [m.id]: true }));
+                    try {
+                      await favoritesService.addFavorite(m.id);
+                      setAddedIds((s) => ({ ...s, [m.id]: true }));
+                    } catch (e) {
+                      console.warn('Erro ao adicionar favorito', e);
+                    } finally {
+                      setAdding((s) => ({ ...s, [m.id]: false }));
+                    }
+                  }}
+                  style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20 }}
+                >
+                  {adding[m.id] ? (
+                    <ActivityIndicator size="small" color="#e11d48" />
+                  ) : (
+                    <Feather name="heart" size={20} color={addedIds[m.id] ? '#e11d48' : '#999'} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
           ))}
         </View>
       </View>
@@ -182,9 +240,34 @@ export default function MapsScreen() {
       {/* Simple sticky list at bottom for quick navigation to markers (native) */}
       <View style={styles.bottomList} pointerEvents="box-none">
         {markers.map((m) => (
-          <TouchableOpacity key={`btn-${m.id}`} style={styles.listItem} onPress={() => goToCoordinate(m.coordinate.latitude, m.coordinate.longitude)}>
-            <Text style={styles.listText}>{m.title}</Text>
-          </TouchableOpacity>
+          <View key={`btn-${m.id}`} style={[styles.listItem, { flexDirection: 'row', alignItems: 'center' }]}> 
+            <TouchableOpacity style={{ flex: 1 }} onPress={() => goToCoordinate(m.coordinate.latitude, m.coordinate.longitude)}>
+              <Text style={styles.listText}>{m.title}</Text>
+            </TouchableOpacity>
+            <View style={{ marginLeft: 8 }}>
+              {addedIds[m.id] ? (
+                <Text style={{ color: '#22c55e', fontWeight: '600' }}>✓</Text>
+              ) : (
+                <TouchableOpacity
+                  onPress={async () => {
+                    if (adding[m.id]) return;
+                    setAdding((s) => ({ ...s, [m.id]: true }));
+                    try {
+                      await favoritesService.addFavorite(m.id);
+                      setAddedIds((s) => ({ ...s, [m.id]: true }));
+                    } catch (e) {
+                      console.warn('Erro ao adicionar favorito', e);
+                    } finally {
+                      setAdding((s) => ({ ...s, [m.id]: false }));
+                    }
+                  }}
+                  style={{ paddingHorizontal: 8, paddingVertical: 6, backgroundColor: '#22c55e', borderRadius: 6 }}
+                >
+                  {adding[m.id] ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff' }}>+</Text>}
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         ))}
       </View>
     </View>

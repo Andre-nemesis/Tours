@@ -4,8 +4,6 @@ import React from "react";
 
 export default function Layout() {
 
-  // const isDark = theme === "dark";
-
   return (
     <Tabs
       screenOptions={{
@@ -17,8 +15,6 @@ export default function Layout() {
           height: 70,
           paddingBottom: 10,
           paddingTop: 10,
-          // backgroundColor: isDark ? "#111" : "#FFF",
-          // borderTopColor: isDark ? "#222" : "#ddd",
         },
         tabBarLabelStyle: {
           fontSize: 12,
