@@ -79,5 +79,15 @@ export async function loginRequest(email: string, password: string) {
 }
 
 export async function registerRequest(name: string, email: string, password: string) {
-  return api.post('/api/users', { name, email, password });
+  try {
+    const response = await api.post('/api/users', {
+      name,
+      email,
+      password,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.log('Erro completo:', error.response?.data || error.message);
+    throw error;
+  }
 }

@@ -5,13 +5,58 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import api from "../../services/api";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function ForgotPasswordStep1Screen() {
-  const [secure, setSecure] = useState(true);
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleContinue = async () => {
+    if (!email.trim()) {
+      Alert.alert("Erro", "Por favor, insira um email");
+      return;
+    }
+
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Erro", "Email inválido");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Faz chamada à API para verificar se email existe
+      const response = await api.post("api/users/forgot-password", { email });
+
+      if (response.data.exists) {
+        setModalVisible(true);
+        Alert.alert("Email encontrado", "Um email para redefinição de senha foi enviado.");
+      } else {
+        Alert.alert("Email não encontrado", "Este email não está registrado em nossa plataforma");
+      }
+    } catch (error: any) {
+      console.error("Erro ao verificar email:", error);
+
+      if (error.response?.status === 404) {
+        Alert.alert("Email não encontrado", "Este email não está registrado em nossa plataforma");
+      } else if (error.response?.status === 400) {
+        Alert.alert("Erro", error.response.data?.message || "Email inválido");
+      } else {
+        Alert.alert("Erro", "Não foi possível verificar o email. Tente novamente mais tarde.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -29,13 +74,37 @@ export default function ForgotPasswordStep1Screen() {
 
       {/* Campo Email */}
       <Text style={styles.label}>Email:</Text>
-      <TextInput style={styles.input} placeholder="" />
+      <TextInput
+        style={styles.input}
+        placeholder="seu-email@exemplo.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
+        editable={!loading}
+      />
 
-      {/* Botão Criar conta */}
-      <TouchableOpacity style={styles.primaryButton}>
-        <Text style={styles.loginText}>Continuar</Text>
+      {/* Botão Continuar */}
+      <TouchableOpacity
+        style={[styles.primaryButton, loading && styles.buttonDisabled]}
+        onPress={handleContinue}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFF" />
+        ) : (
+          <Text style={styles.loginText}>Continuar</Text>
+        )}
       </TouchableOpacity>
-      
+      <ConfirmModal
+        visible={modalVisible}
+        title="Remover favorito"
+        message={"E-mail Enviado!"}
+        confirmText="Continuar"
+        cancelText="Cancelar"
+        onCancel={() => { setModalVisible(false); }}
+        onConfirm={async () => {setModalVisible(false);}}
+      />
     </View>
   );
 }
@@ -85,26 +154,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E9E9E9",
-    borderRadius: 6,
-    paddingHorizontal: 14,
-    marginBottom: 10,
-  },
-
-  passwordInput: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 16,
-  },
-
-  forgotText: {
-    color: "#0077A8",
-    fontSize: 14,
-  },
-
   primaryButton: {
     marginTop: 30,
     backgroundColor: "#00C18A",
@@ -113,22 +162,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
   loginText: {
     color: "#FFF",
     fontSize: 16,
     fontWeight: "500",
-  },
-
-  secundaryButton: {
-    marginTop: 14,
-    backgroundColor: "#E4E4E4",
-    padding: 15,
-    borderRadius: 6,
-    alignItems: "center",
-  },
-
-  createText: {
-    fontSize: 16,
-    color: "#444",
   },
 });

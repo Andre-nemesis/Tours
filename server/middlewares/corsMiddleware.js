@@ -1,29 +1,20 @@
+// middlewares/corsMiddleware.js
 import cors from 'cors';
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(',')
-      : ['http://localhost:3000', 'http://localhost:5173'];
-
-    // Permitir requisições sem origin (mobile apps, Postman, etc)
-    if (!origin) {
+  origin: (origin, callback) => {
+    // Permite requisições sem origin (Expo Go no celular) e com origin
+    if (!origin || origin === 'null' || origin.includes('localhost') || origin.includes('ngrok')) {
       return callback(null, true);
     }
-
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Em produção você pode colocar uma whitelist aqui
+    callback(null, true); // ou sua lógica de whitelist
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // 24 hours
+  maxAge: 86400,
 };
 
-const corsMiddleware = cors(corsOptions);
-
-export default corsMiddleware;
+export default cors(corsOptions);
