@@ -7,10 +7,15 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Modal,
+  ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';
 import api from '../../services/api';
+import LocationDetailsModal from '../../components/LocationDetailsModal';
+import { BarCodeScanner } from 'expo-barcode-scanner';
 
 type Props = {
   goToInicio?: () => void;
@@ -25,6 +30,14 @@ export default function HomeScreen(_props: Props) {
   const [recent, setRecent] = useState<Array<any>>([]);
   const [suggestions, setSuggestions] = useState<Array<any>>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [scanned, setScanned] = useState(false);
+  const [webScannerVisible, setWebScannerVisible] = useState(false);
+  const [pasteText, setPasteText] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -63,6 +76,50 @@ export default function HomeScreen(_props: Props) {
     router.push('Maps');
   };
 
+  const openDetails = (id: string) => {
+    setSelectedId(id);
+    setModalVisible(true);
+  };
+
+  const requestCameraPermission = async () => {
+    try {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+      return status === 'granted';
+    } catch (e) {
+      setHasPermission(false);
+      return false;
+    }
+  };
+
+  const openScanner = async () => {
+    if (Platform.OS === 'web') {
+      setPasteText('');
+      setWebScannerVisible(true);
+      return;
+    }
+    const ok = await requestCameraPermission();
+    if (ok) {
+      setScanned(false);
+      setScannerVisible(true);
+    }
+  };
+
+  const handleBarCodeScanned = ({ data }: { data: string }) => {
+    if (scanned) return;
+    setScanned(true);
+    const urlIdMatch = data.match(/locations\/(?:#?\/?)*([0-9a-fA-F\-]{8,36})/i);
+    const uuidMatch = data.match(/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/);
+    const id = urlIdMatch ? urlIdMatch[1] : (uuidMatch ? uuidMatch[1] : (data || null));
+    if (id) {
+      setSelectedId(id);
+      setScannerVisible(false);
+      setModalVisible(true);
+    } else {
+      setTimeout(() => setScannerVisible(false), 1000);
+    }
+  };
+
   const getPhotoUri = (photo: any) => {
     const fallback = 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad';
     if (!photo) return fallback;
@@ -83,7 +140,7 @@ export default function HomeScreen(_props: Props) {
           <Text style={styles.hello}>Olá, {userName || 'Visitante'}</Text>
         </View>
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={openScanner}>
           <Ionicons name="scan-outline" size={22} color="#000" />
         </TouchableOpacity>
       </View>
@@ -112,7 +169,7 @@ export default function HomeScreen(_props: Props) {
           <Text style={{ color: '#666' }}>Nenhuma visita recente.</Text>
         )}
         {recent.map((loc) => (
-          <TouchableOpacity key={loc.id} style={styles.visitCard} onPress={openMaps}>
+          <TouchableOpacity key={loc.id} style={styles.visitCard} onPress={() => openDetails(loc.id)}>
             <Image
               source={{ uri: getPhotoUri(loc.photo) }}
               style={styles.avatar}
@@ -128,36 +185,68 @@ export default function HomeScreen(_props: Props) {
         ))}
       </View>
 
-      {/* Maybe you like */}
-      <Text style={[styles.subtitleSection, { marginTop: 20 }]}>
-        Talvez você goste
-      </Text>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {suggestions.length === 0 && (
-          <>
-            <Image
-              style={styles.suggestion}
-              source={{ uri: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad' }}
-            />
-            <Image
-              style={styles.suggestion}
-              source={{ uri: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad' }}
-            />
-            <Image
-              style={styles.suggestion}
-              source={{ uri: 'https://images.unsplash.com/photo-1495273967996-d057c23c5d55' }}
-            />
-          </>
-        )}
-        {suggestions.map((s) => (
-          <TouchableOpacity key={s.id} onPress={openMaps}>
-            <Image style={styles.suggestion} source={{ uri: getPhotoUri(s.photo) }} />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
       <View style={{ height: 80 }} />
+      <LocationDetailsModal visible={modalVisible} locationId={selectedId || undefined} onClose={() => setModalVisible(false)} />
+
+      <Modal visible={scannerVisible} transparent animationType="slide" onRequestClose={() => setScannerVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          {hasPermission === null && (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <ActivityIndicator size="large" color="#fff" />
+              <Text style={{ color: '#fff', marginTop: 12 }}>Solicitando permissão de câmera...</Text>
+            </View>
+          )}
+          {hasPermission === false && (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+              <Text style={{ color: '#fff', textAlign: 'center' }}>Permissão de câmera negada. Habilite nas configurações do dispositivo.</Text>
+              <TouchableOpacity onPress={() => setScannerVisible(false)} style={{ marginTop: 12 }}>
+                <Text style={{ color: '#fff' }}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {hasPermission === true && (
+            <BarCodeScanner
+              onBarCodeScanned={handleBarCodeScanned}
+              style={{ flex: 1 }}
+            />
+          )}
+          <TouchableOpacity onPress={() => setScannerVisible(false)} style={{ position: 'absolute', top: 40, right: 16 }}>
+            <Ionicons name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      <Modal visible={webScannerVisible} transparent animationType="slide" onRequestClose={() => setWebScannerVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', padding: 20, justifyContent: 'center' }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 8, padding: 16 }}>
+            <Text style={{ fontWeight: '600', marginBottom: 8 }}>Cole o conteúdo do QR code</Text>
+            <TextInput
+              value={pasteText}
+              onChangeText={setPasteText}
+              placeholder="Cole URL ou ID aqui"
+              style={{ borderWidth: 1, borderColor: '#ddd', padding: 8, borderRadius: 6, marginBottom: 12 }}
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <TouchableOpacity onPress={() => setWebScannerVisible(false)} style={{ marginRight: 12 }}>
+                <Text>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {
+                const data = pasteText || '';
+                const urlIdMatch = data.match(/locations\/(?:#?\/?)*([0-9a-fA-F\-]{8,36})/i);
+                const uuidMatch = data.match(/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/);
+                const id = urlIdMatch ? urlIdMatch[1] : (uuidMatch ? uuidMatch[1] : (data || null));
+                if (id) {
+                  setSelectedId(id);
+                  setWebScannerVisible(false);
+                  setModalVisible(true);
+                }
+              }}>
+                <Text style={{ fontWeight: '600' }}>Abrir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

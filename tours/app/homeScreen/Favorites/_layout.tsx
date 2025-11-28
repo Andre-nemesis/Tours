@@ -1,27 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, ActivityIndicator } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
+import favoritesService from '../../../services/favorites';
+import ConfirmModal from '../../../components/ConfirmModal';
+import { on, off } from '../../../services/eventBus';
+import LocationDetailsModal from '../../../components/LocationDetailsModal';
+import api from '../../../services/api';
 
 export default function Favoritos() {
   const [search, setSearch] = useState('');
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [toRemove, setToRemove] = useState<{ locId?: string; locName?: string } | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const data = [
-    {
-      id: 1,
-      nome: 'Centro Dragão do Mar',
-      local: 'Fortaleza, Ce'
-    },
-    {
-      id: 2,
-      nome: 'Centro Dragão do Mar',
-      local: 'Fortaleza, Ce'
-    },
-  ];
+  useEffect(() => {
+    loadFavorites();
+    const unsub = on('favoritesChanged', () => {
+      loadFavorites();
+    });
+    return () => { unsub(); };
+  }, []);
 
-  const filteredData = data.filter(item =>
-    item.nome.toLowerCase().includes(search.toLowerCase()) ||
-    item.local.toLowerCase().includes(search.toLowerCase())
-  );
+  async function loadFavorites() {
+    setLoading(true);
+    try {
+      const res = await favoritesService.getFavorites();
+      console.log('favorites response', res);
+      const processed = Array.isArray(res) ? res.map((f) => ({ ...f, location: f.location || null })) : [];
+      console.log('processed favorites count', processed.length, processed.map(p => ({ id: p.id, locationId: p.location?.id })));
+      setFavorites(processed);
+    } catch (e) {
+      console.warn('Erro ao carregar favoritos', e);
+      setFavorites([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const getPhotoUri = (photo: any) => {
+    const fallback = 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad';
+    if (!photo) return fallback;
+    try {
+      const p = String(photo);
+      if (p.startsWith('http') || p.startsWith('data:')) return p;
+      const base = (api.defaults.baseURL || 'http://localhost:3000').replace(/\/$/, '');
+      return `${base}/${p.replace(/^\//, '')}`;
+    } catch (e) {
+      return String(photo);
+    }
+  };
+
+  const filteredData = favorites.filter((item) => {
+    const nome = (item.location && item.location.name) ? item.location.name : '';
+    const rawAddress = (item.location && item.location.address) ? item.location.address : '';
+    const local = typeof rawAddress === 'string' ? rawAddress : (rawAddress && typeof rawAddress === 'object' ? (rawAddress.formatted || rawAddress.street || `${rawAddress.lat || ''} ${rawAddress.long || ''}`) : '');
+    return nome.toLowerCase().includes(search.toLowerCase()) || local.toLowerCase().includes(search.toLowerCase());
+  });
 
   return (
     <View style={styles.container}>
@@ -39,31 +76,79 @@ export default function Favoritos() {
 
       {/* LISTA */}
       <ScrollView style={{ width: '100%', marginTop: 10 }}>
-        {filteredData.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.card}>
-            
-            {/* Avatar com ícone */}
-            <View style={styles.avatar}>
-              <Image
-                source={require('../../../assets/images/ellipse1.png')}
-                style={styles.ellipseImage}
-              />
-              <Image
-                source={require('../../../assets/images/ellipse2.png')}
-                style={styles.ellipseImage}
-              />
-            </View>
+        {loading && <ActivityIndicator size="small" color="#22c55e" style={{ margin: 12 }} />}
+        {!loading && filteredData.length === 0 && (
+          <Text style={{ color: '#777', marginTop: 12 }}>Nenhum favorito encontrado.</Text>
+        )}
 
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{item.nome}</Text>
-              <Text style={styles.cardLocation}>{item.local}</Text>
-            </View>
+        {filteredData.map((item) => {
+          const loc = item.location || {};
+          return (
+            <TouchableOpacity key={item.id} style={styles.card} onPress={() => { setSelectedId(loc.id); setModalVisible(true); }}>
+              <View style={styles.avatar}>
+                <Image
+                  source={{ uri: getPhotoUri(loc.photo) }}
+                  style={styles.avatarImage}
+                />
+              </View>
 
-            {/* Seta */}
-            <Feather name="chevron-right" size={22} color="#333" />
-          </TouchableOpacity>
-        ))}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>{loc.name || 'Local sem nome'}</Text>
+                <Text style={styles.cardLocation}>{
+                  (() => {
+                    const a = loc.address;
+                    if (!a) return '';
+                    if (typeof a === 'string') return a;
+                    if (typeof a === 'object') {
+                      return a.formatted || a.street || (a.city ? `${a.city}${a.state ? ', ' + a.state : ''}` : `${a.lat || ''} ${a.long || ''}`) || '';
+                    }
+                    return '';
+                  })()
+                }</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setToRemove({ locId: loc.id, locName: loc.name });
+                    setConfirmVisible(true);
+                  }}
+                  style={{ marginRight: 10 }}
+                >
+                  <Feather name="trash-2" size={20} color="#e11d48" />
+                </TouchableOpacity>
+
+                <Feather name="chevron-right" size={22} color="#333" />
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+        <LocationDetailsModal visible={modalVisible} locationId={selectedId || undefined} onClose={() => setModalVisible(false)} />
       </ScrollView>
+      <ConfirmModal
+        visible={confirmVisible}
+        title="Remover favorito"
+        message={toRemove?.locName ? `Tem certeza que deseja remover "${toRemove.locName}" dos favoritos?` : 'Tem certeza que deseja remover este favorito?'}
+        confirmText="Remover"
+        cancelText="Cancelar"
+        onCancel={() => { setConfirmVisible(false); setToRemove(null); }}
+        onConfirm={async () => {
+          if (!toRemove?.locId) {
+            setConfirmVisible(false);
+            setToRemove(null);
+            return;
+          }
+          try {
+            await favoritesService.removeFavorite(toRemove.locId);
+            setFavorites((prev) => prev.filter((f) => f.location?.id !== toRemove.locId));
+          } catch (e) {
+            console.warn('Erro ao remover favorito', e);
+          } finally {
+            setConfirmVisible(false);
+            setToRemove(null);
+          }
+        }}
+      />
     </View>
   );
 }
@@ -116,6 +201,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
     overflow: 'hidden', // Ensure images stay within the circle
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   ellipseImage: {
     width: '100%', 
