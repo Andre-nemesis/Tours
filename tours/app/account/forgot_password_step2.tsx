@@ -1,17 +1,99 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import api from "../../services/api";
+import { useRouter } from "expo-router";
 
-export default function ForgotPasswordStep2Screenn() {
-  const [secure, setSecure] = useState(true);
+export default function ForgotPasswordStep2Screen() {
   const navigation = useNavigation();
+  const router = useRouter();
+  const route = useRoute();
+  const params = (route.params || {}) as any;
+  const emailParam = params.email as string | undefined;
+  const expiresParam = params.expires as number | undefined;
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [securePassword, setSecurePassword] = useState(true);
+  const [secureConfirm, setSecureConfirm] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!emailParam || !expiresParam) {
+      Alert.alert("Parâmetros inválidos", "Link inválido ou expirado.");
+      // volta para tela anterior/login
+      navigation.goBack();
+    }
+  }, [emailParam, expiresParam, navigation]);
+
+  const handleResetPassword = async () => {
+    if (!password || !confirmPassword) {
+      Alert.alert("Erro", "Preencha os dois campos de senha.");
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert("Erro", "A senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Erro", "As senhas não coincidem.");
+      return;
+    }
+    if (!emailParam || !expiresParam) {
+      Alert.alert(
+        "Erro",
+        "Parâmetros inválidos. Tente novamente pelo link enviado."
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        encodedEmail: emailParam,
+        password,
+        expires: expiresParam,
+      };
+
+      const res = await api.post("api/users/reset-password", payload);
+
+      if (res.status === 200 || res.status === 201) {
+        router.replace('/account');
+        Alert.alert("Sucesso", "Senha alterada com sucesso.", [
+          {
+            text: "OK",
+            onPress: () => {
+              router.replace('/');
+            },
+          },
+        ]);
+      } else {
+        Alert.alert(
+          "Erro",
+          res.data?.message || "Não foi possível redefinir a senha."
+        );
+      }
+    } catch (error: any) {
+      console.error("reset password error", error);
+      if (error.response?.data?.message) {
+        Alert.alert("Erro", error.response.data.message);
+      } else {
+        Alert.alert("Erro", "Não foi possível redefinir a senha. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -23,21 +105,25 @@ export default function ForgotPasswordStep2Screenn() {
 
       {/* Títulos */}
       <Text style={styles.title}>Estamos quase lá...</Text>
-      <Text style={styles.subtitle}>
-        Cadastre sua nova senha
-      </Text>
+      <Text style={styles.subtitle}>Cadastre sua nova senha</Text>
 
       {/* Campo Senha */}
       <Text style={styles.label}>Senha:</Text>
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
-          secureTextEntry={secure}
-          placeholder=""
+          secureTextEntry={securePassword}
+          placeholder="Nova senha"
+          value={password}
+          onChangeText={setPassword}
+          editable={!loading}
         />
-        <TouchableOpacity onPress={() => setSecure(!secure)}>
+        <TouchableOpacity
+          onPress={() => setSecurePassword(!securePassword)}
+          disabled={loading}
+        >
           <Ionicons
-            name={secure ? "eye-off-outline" : "eye-outline"}
+            name={securePassword ? "eye-off-outline" : "eye-outline"}
             size={22}
             color="#555"
           />
@@ -48,23 +134,36 @@ export default function ForgotPasswordStep2Screenn() {
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
-          secureTextEntry={secure}
-          placeholder=""
+          secureTextEntry={secureConfirm}
+          placeholder="Confirme a senha"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          editable={!loading}
         />
-        <TouchableOpacity onPress={() => setSecure(!secure)}>
+        <TouchableOpacity
+          onPress={() => setSecureConfirm(!secureConfirm)}
+          disabled={loading}
+        >
           <Ionicons
-            name={secure ? "eye-off-outline" : "eye-outline"}
+            name={secureConfirm ? "eye-off-outline" : "eye-outline"}
             size={22}
             color="#555"
           />
         </TouchableOpacity>
       </View>
 
-      {/* Botão Criar conta */}
-      <TouchableOpacity style={styles.primaryButton}>
-        <Text style={styles.loginText}>Concluir recuperação de senha</Text>
+      {/* Botão Concluir */}
+      <TouchableOpacity
+        style={[styles.primaryButton, loading && { opacity: 0.7 }]}
+        onPress={handleResetPassword}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.loginText}>Concluir recuperação de senha</Text>
+        )}
       </TouchableOpacity>
-
     </View>
   );
 }
@@ -74,7 +173,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F4F4F4",
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: Platform.OS === "ios" ? 60 : 40,
   },
 
   back: {
@@ -129,11 +228,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  forgotText: {
-    color: "#0077A8",
-    fontSize: 14,
-  },
-
   primaryButton: {
     marginTop: 30,
     backgroundColor: "#00C18A",
@@ -146,18 +240,5 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "500",
-  },
-
-  secundaryButton: {
-    marginTop: 14,
-    backgroundColor: "#E4E4E4",
-    padding: 15,
-    borderRadius: 6,
-    alignItems: "center",
-  },
-
-  createText: {
-    fontSize: 16,
-    color: "#444",
   },
 });
