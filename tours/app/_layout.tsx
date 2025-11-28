@@ -4,9 +4,10 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
+import React, { useEffect } from 'react';
 
 import { ThemeProvider, useTheme } from '../components/ThemeContext'; // Importar o ThemeProvider e useTheme
-import { useEffect } from 'react';
+import ConnectionListener from '../components/ConnectionListener';
 import { loadToken } from '../services/auth';
 
 export {
@@ -49,6 +50,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
+      <ConnectionListener />
       <RootLayoutNav />
     </ThemeProvider>
   );

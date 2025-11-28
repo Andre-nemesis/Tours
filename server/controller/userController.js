@@ -83,7 +83,7 @@ const UserController = {
             const encodedEmail = encodeURIComponent(
                 Buffer.from(email).toString("base64")
             );
-            const passwordResetLink = `http://localhost:3000/resetPassword/${encodedEmail}/${expires}`;
+            const passwordResetLink = `http://localhost:8081/forgot_password_step2/${encodedEmail}/${expires}`;
 
             const mailOptions = {
                 from: process.env.EMAIL_USER,
@@ -124,7 +124,6 @@ const UserController = {
             if (!password) {
                 return res.status(400).json({ error: "Nova senha é obrigatória." });
             }
-
             const user = await db.Users.findOne({ where: { email } });
             if (!user) {
                 return res.status(404).json({ error: "Usuário não encontrado." });
