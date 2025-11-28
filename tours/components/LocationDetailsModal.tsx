@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, StyleSheet, Image, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
+import { Video } from 'expo-av';
 
 type Props = {
   visible: boolean;
@@ -14,6 +15,8 @@ export default function LocationDetailsModal({ visible, locationId, onClose }: P
   const [data, setData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const selectedVideoRef = React.useRef<any>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -100,15 +103,44 @@ export default function LocationDetailsModal({ visible, locationId, onClose }: P
                       {data.views.filter((v: any) => {
                         const ct = (v.contentType || '').toLowerCase();
                         const knownImageExt = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
-                        return ct.includes('image') || knownImageExt.includes(ct) || (v.content && (String(v.content).startsWith('data:') || String(v.content).startsWith('http')));
-                      }).map((v: any) => (
-                        <TouchableOpacity key={v.id} style={{ marginRight: 8 }} activeOpacity={0.8} onPress={() => setSelectedImage(getPhotoUri(v.content))}>
-                          <Image
-                            source={{ uri: getPhotoUri(v.content) }}
-                            style={{ width: 120, height: 80, borderRadius: 8, backgroundColor: '#eee' }}
-                          />
-                        </TouchableOpacity>
-                      ))}
+                        const knownVideoExt = ['.mp4', '.mov', '.webm', '.mkv'];
+                        const contentStr = String(v.content || '');
+                        const isImage = ct.includes('image') || knownImageExt.includes(ct) || contentStr.startsWith('data:') || contentStr.startsWith('http');
+                        return isImage || ct.includes('video') || knownVideoExt.includes(ct);
+                      }).map((v: any) => {
+                        const ct = (v.contentType || '').toLowerCase();
+                        const knownVideoExt = ['.mp4', '.mov', '.webm', '.mkv'];
+                        const contentUri = getPhotoUri(v.content);
+                        const isVideo = ct.includes('video') || knownVideoExt.includes(ct) || String(v.filename || '').match(/\.(mp4|mov|webm|mkv)$/i);
+                        if (isVideo) {
+                          return (
+                            <TouchableOpacity key={v.id} style={{ marginRight: 8 }} activeOpacity={0.9} onPress={() => setSelectedVideo(contentUri)}>
+                              <View style={{ width: 160, height: 90, borderRadius: 8, overflow: 'hidden', backgroundColor: '#000' }}>
+                                <Video
+                                  source={{ uri: contentUri }}
+                                  style={{ width: '100%', height: '100%' }}
+                                  useNativeControls={false}
+                                  resizeMode={'cover' as any}
+                                  isLooping
+                                  shouldPlay={false}
+                                />
+                                <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                                  <Ionicons name="play-circle" size={36} color="rgba(255,255,255,0.9)" />
+                                </View>
+                              </View>
+                            </TouchableOpacity>
+                          );
+                        }
+
+                        return (
+                          <TouchableOpacity key={v.id} style={{ marginRight: 8 }} activeOpacity={0.8} onPress={() => setSelectedImage(contentUri)}>
+                            <Image
+                              source={{ uri: contentUri }}
+                              style={{ width: 120, height: 80, borderRadius: 8, backgroundColor: '#eee' }}
+                            />
+                          </TouchableOpacity>
+                        );
+                      })}
                     </ScrollView>
                   </View>
                 )}
@@ -116,6 +148,23 @@ export default function LocationDetailsModal({ visible, locationId, onClose }: P
             </ScrollView>
           )}
         </View>
+      </View>
+    </Modal>
+    <Modal visible={!!selectedVideo} transparent animationType="fade" onRequestClose={() => { if (selectedVideoRef.current && selectedVideoRef.current.pauseAsync) selectedVideoRef.current.pauseAsync(); setSelectedVideo(null); }}>
+      <View style={styles.fullScreenContainer}>
+        <TouchableOpacity style={styles.fullScreenClose} onPress={() => { if (selectedVideoRef.current && selectedVideoRef.current.pauseAsync) selectedVideoRef.current.pauseAsync(); setSelectedVideo(null); }}>
+          <Ionicons name="close" size={30} color="#fff" />
+        </TouchableOpacity>
+        {selectedVideo ? (
+          <Video
+            ref={selectedVideoRef}
+            source={{ uri: selectedVideo }}
+            style={styles.fullScreenImage}
+            useNativeControls
+            resizeMode={'contain' as any}
+            shouldPlay
+          />
+        ) : null}
       </View>
     </Modal>
 

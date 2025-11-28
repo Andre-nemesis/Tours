@@ -20,9 +20,25 @@ module.exports = {
           updatedAt: date
         },
         {
+          name: 'Quadra Esportiva Video',
+          contentType: '.mp4',
+          content: '../archives/ifce_cedro/video/VID_20251127_142129.mp4',
+          locationId: locationsIds[0][0].id,
+          createdAt: date,
+          updatedAt: date
+        },
+        {
           name: 'Biblioteca',
           contentType: '.jpg',
           content: '../archives/ifce_cedro/image/biblioteca.jpg',
+          locationId: locationsIds[0][0].id,
+          createdAt: date,
+          updatedAt: date
+        },
+        {
+          name: 'Biblioteca Video',
+          contentType: '.mp4',
+          content: '../archives/ifce_cedro/video/VID_20251127_164522.mp4',
           locationId: locationsIds[0][0].id,
           createdAt: date,
           updatedAt: date
